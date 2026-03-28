@@ -2,204 +2,294 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SBFB Type Studio | Professional IDE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitSpace | Ultimate Local IDE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; background: #1e1e1e; color: #fff; overflow: hidden; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #252526; padding: 10px; border-radius: 8px; border: 1px solid #333; }
-        .workspace { display: flex; gap: 15px; height: calc(100vh - 100px); }
-        .panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* Editor Styles */
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; border: 1px solid #333; border-radius: 8px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; resize: none; outline: none; line-height: 1.5; }
-        textarea:focus { border-color: #4CAF50; }
-
-        /* Output Styles */
-        .terminal { flex: 1; background: #000; color: #00FF00; padding: 15px; font-family: 'Consolas', monospace; overflow-y: auto; border: 1px solid #333; border-radius: 8px; white-space: pre-wrap; font-size: 13px; }
-        .preview-box { flex: 1; background: white; border-radius: 8px; border: none; }
-        
-        .btn-run { background: #4CAF50; color: white; padding: 10px 25px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-run:hover { background: #45a049; transform: scale(1.05); }
-        .api-input { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 250px; }
-        
-        .error-text { color: #ff5555; }
-        .sys-text { color: #569cd6; }
-        .var-text { color: #ce9178; }
+        .editor-bg { background: #1e1e1e; color: #d4d4d4; }
+        .terminal-bg { background: #000; color: #00FF00; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #2d2d2d; }
+        ::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
 
-    <div class="top-bar">
-        <div style="font-weight: bold; color: #4CAF50;">⚡ SBFB TYPE-CODE IDE</div>
-        <div style="display: flex; gap: 10px;">
-            <input type="password" id="groqApiKey" class="api-input" placeholder="Groq API Key (Optional)">
-            <button onclick="runSBFB()" class="btn-run">▶ RUN PROGRAM</button>
-        </div>
-    </div>
-
-    <div class="workspace">
-        <div class="panel">
-            <textarea id="codeInput" spellcheck="false">start:SBFB
-frontend
-
-type ("--- Testing SBFB Math & Memory ---")
-let myName = "Creator"
-let baseScore = 10
-let bonus = 5
-let total = baseScore + bonus
-
-type ("Welcome ")
-type (myName)
-type ("Your starting score is: ")
-type (total)
-
-type ("")
-type ("--- Testing Upgraded Loops ---")
-
-let loopCount = 3
-let counter = 1
-
-repeat loopCount {
-    type ("Loop iteration: ")
-    type (counter)
-    
-    // Rendering to the live preview box!
-    render ("<h1 style='color:blue;'>Hello Loop ")
-    render (counter)
-    render ("</h1>")
-    
-    // Math reassignment!
-    counter = counter + 1
-}
-
-<end:SBFB></textarea>
+    <header class="bg-gray-900 text-white p-4 shadow-xl flex justify-between items-center border-b border-gray-700">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tighter">GitSpace <span class="text-xs font-light text-gray-400 ml-1 italic underline">SBFB Engine v2.0</span></h1>
         </div>
 
-        <div class="panel">
-            <iframe id="webPreview" class="preview-box"></iframe>
-            <div id="outputScreen" class="terminal">Terminal ready...</div>
+        <div class="flex items-center space-x-4">
+            <div class="flex flex-col items-end mr-2">
+                <span class="text-[10px] uppercase text-gray-500 font-bold">Current Space</span>
+                <select id="spaceSelector" onchange="switchSpace()" class="bg-gray-800 text-blue-400 text-sm font-mono border-none outline-none cursor-pointer">
+                    </select>
+            </div>
+            <button onclick="createNewSpace()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs transition-all">+ New Space</button>
+            <button onclick="exportSpace()" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs font-bold transition-all">Export .JSON</button>
         </div>
-    </div>
+    </header>
+
+    <main class="flex-grow flex overflow-hidden">
+        
+        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+            <div class="p-4 bg-gray-900 flex justify-between items-center">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Explorer</span>
+                <button onclick="newFile()" class="text-gray-400 hover:text-white text-lg font-bold">+</button>
+            </div>
+            <ul id="fileList" class="flex-grow overflow-y-auto py-2">
+                </ul>
+            <div class="p-4 border-t border-gray-700">
+                <button onclick="launchPagesMode()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm font-bold shadow-lg transition-all">
+                    🚀 Launch Pages
+                </button>
+            </div>
+        </aside>
+
+        <section class="flex-grow flex flex-col bg-gray-900">
+            <div class="bg-gray-800 p-2 flex items-center space-x-2 border-b border-gray-700">
+                <input type="text" id="activeFilename" placeholder="filename.html" class="bg-transparent text-gray-300 text-sm font-mono px-2 py-1 outline-none border-b border-gray-600 focus:border-blue-500 w-64">
+                <button onclick="saveActiveFile()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded text-xs font-bold">Save</button>
+                <div id="langIndicator" class="text-[10px] font-bold px-2 py-1 rounded bg-gray-700 text-gray-400 uppercase">RAW</div>
+                <button id="runSbfbBtn" onclick="runSbfb()" class="hidden bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-1 rounded text-xs font-bold ml-auto">▶ RUN SBFB</button>
+            </div>
+            <textarea id="editor" spellcheck="false" class="flex-grow p-6 editor-bg font-mono text-sm outline-none resize-none" placeholder="// Start coding here..."></textarea>
+        </section>
+
+        <aside class="w-96 bg-black border-l border-gray-700 flex flex-col">
+            <div class="bg-gray-900 p-3 text-xs font-bold text-gray-400 border-b border-gray-700">SBFB TERMINAL</div>
+            <div id="terminal" class="flex-grow p-4 terminal-bg font-mono text-xs overflow-y-auto whitespace-pre-wrap">Terminal ready...</div>
+            <div class="h-1/2 bg-white border-t-4 border-gray-800">
+                <div class="bg-gray-200 p-1 text-[10px] font-bold text-gray-600 text-center uppercase">Live Frontend Preview</div>
+                <iframe id="preview" class="w-full h-full bg-white"></iframe>
+            </div>
+        </aside>
+
+    </main>
 
     <script>
-        window.onload = function() {
-            const savedKey = localStorage.getItem("sbfb_api_key");
-            if (savedKey) document.getElementById("groqApiKey").value = savedKey;
+        const KEY_PREFIX = "GS_v3_";
+        let currentSpace = localStorage.getItem("GS_ACTIVE_SPACE") || "default-repo";
+        let currentFile = "";
+        let memory = {};
+        let htmlContent = "";
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            initSpaces();
+            refreshFileList();
+            switchSpace(currentSpace);
         };
 
-        async function runSBFB() {
-            const code = document.getElementById("codeInput").value;
-            const terminal = document.getElementById("outputScreen");
-            const preview = document.getElementById("webPreview");
-            const apiKey = document.getElementById("groqApiKey").value;
+        function initSpaces() {
+            let spaces = JSON.parse(localStorage.getItem("GS_SPACES") || '["default-repo"]');
+            const selector = document.getElementById("spaceSelector");
+            selector.innerHTML = "";
+            spaces.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s; opt.innerText = s;
+                if(s === currentSpace) opt.selected = true;
+                selector.appendChild(opt);
+            });
+        }
+
+        function createNewSpace() {
+            let name = prompt("Enter Space Name (No spaces):");
+            if(!name) return;
+            name = name.trim().replace(/\s+/g, '-').toLowerCase();
+            let spaces = JSON.parse(localStorage.getItem("GS_SPACES") || '["default-repo"]');
+            if(!spaces.includes(name)) {
+                spaces.push(name);
+                localStorage.setItem("GS_SPACES", JSON.stringify(spaces));
+            }
+            switchSpace(name);
+            initSpaces();
+        }
+
+        function switchSpace(name) {
+            if(name) currentSpace = name;
+            else currentSpace = document.getElementById("spaceSelector").value;
+            localStorage.setItem("GS_ACTIVE_SPACE", currentSpace);
+            currentFile = "";
+            document.getElementById("editor").value = "";
+            document.getElementById("activeFilename").value = "";
+            refreshFileList();
+        }
+
+        // --- FILE ENGINE ---
+        function refreshFileList() {
+            const list = document.getElementById("fileList");
+            list.innerHTML = "";
+            const prefix = `${KEY_PREFIX}${currentSpace}_`;
+            let filesFound = 0;
+
+            for(let i=0; i<localStorage.length; i++){
+                const key = localStorage.key(i);
+                if(key.startsWith(prefix)){
+                    filesFound++;
+                    const filename = key.replace(prefix, "");
+                    const li = document.createElement("li");
+                    li.className = "px-4 py-2 hover:bg-gray-700 cursor-pointer flex justify-between items-center group transition-all";
+                    const isSbfb = filename.endsWith(".sbfb");
+                    li.innerHTML = `
+                        <div onclick="loadFile('${filename}')" class="flex items-center space-x-3 overflow-hidden">
+                            <span class="${isSbfb ? 'text-yellow-400' : 'text-blue-400'}">${isSbfb ? '⚡' : '📄'}</span>
+                            <span class="text-xs text-gray-300 font-mono truncate">${filename}</span>
+                        </div>
+                        <button onclick="deleteFile('${filename}')" class="text-red-500 opacity-0 group-hover:opacity-100 font-bold">×</button>
+                    `;
+                    list.appendChild(li);
+                }
+            }
+            if(filesFound === 0) list.innerHTML = `<li class="p-4 text-center text-gray-500 text-[10px] uppercase tracking-widest">No files in space</li>`;
+        }
+
+        function saveActiveFile() {
+            const name = document.getElementById("activeFilename").value.trim();
+            const content = document.getElementById("editor").value;
+            if(!name) return alert("Enter a filename!");
+            localStorage.setItem(`${KEY_PREFIX}${currentSpace}_${name}`, content);
+            currentFile = name;
+            refreshFileList();
+            updateUIForFile(name);
+        }
+
+        function loadFile(name) {
+            const content = localStorage.getItem(`${KEY_PREFIX}${currentSpace}_${name}`);
+            document.getElementById("editor").value = content;
+            document.getElementById("activeFilename").value = name;
+            currentFile = name;
+            updateUIForFile(name);
+        }
+
+        function updateUIForFile(name) {
+            const indicator = document.getElementById("langIndicator");
+            const runBtn = document.getElementById("runSbfbBtn");
+            if(name.endsWith(".sbfb")) {
+                indicator.innerText = "SBFB";
+                indicator.className = "text-[10px] font-bold px-2 py-1 rounded bg-yellow-900 text-yellow-400 uppercase";
+                runBtn.classList.remove("hidden");
+            } else if (name.endsWith(".html")) {
+                indicator.innerText = "HTML";
+                indicator.className = "text-[10px] font-bold px-2 py-1 rounded bg-blue-900 text-blue-400 uppercase";
+                runBtn.classList.add("hidden");
+            } else {
+                indicator.innerText = "RAW";
+                indicator.className = "text-[10px] font-bold px-2 py-1 rounded bg-gray-700 text-gray-400 uppercase";
+                runBtn.classList.add("hidden");
+            }
+        }
+
+        function deleteFile(name) {
+            if(confirm(`Delete ${name}?`)) {
+                localStorage.removeItem(`${KEY_PREFIX}${currentSpace}_${name}`);
+                refreshFileList();
+            }
+        }
+
+        // --- SBFB INTERPRETER ---
+        async function runSbfb() {
+            const code = document.getElementById("editor").value;
+            const terminal = document.getElementById("terminal");
+            const preview = document.getElementById("preview");
             
-            if (apiKey) localStorage.setItem("sbfb_api_key", apiKey);
-
-            terminal.innerHTML = "<span class='sys-text'>--- Initializing SBFB Engine ---</span>\n";
-            preview.srcdoc = ""; 
-
-            let memory = {};
+            terminal.innerHTML = ">>> SBFB ENGINE INITIALIZED\n";
+            htmlContent = ""; 
+            memory = {};
             let isRunning = false;
-            let htmlContent = "";
-            const lines = code.split('\n');
+            const lines = code.split("\n");
 
-            async function executeBatch(linesArray) {
-                for (let i = 0; i < linesArray.length; i++) {
-                    let line = linesArray[i].trim();
-                    let lowerLine = line.toLowerCase();
+            async function exec(linesArr) {
+                for(let i=0; i<linesArr.length; i++) {
+                    let line = linesArr[i].trim();
+                    let lower = line.toLowerCase();
 
-                    if (lowerLine === "start:sbfb") { isRunning = true; continue; }
-                    if (lowerLine === "<end:sbfb>" || lowerLine === "<end>") { isRunning = false; break; }
+                    if(lower === "start:sbfb") { isRunning = true; continue; }
+                    if(lower === "<end:sbfb>") { isRunning = false; break; }
 
-                    if (isRunning && line !== "") {
-                        
-                        // 1. Variable Assignment & Math (let x = y OR x = y)
-                        let isAssignment = lowerLine.startsWith("let ") || (line.includes("=") && !line.includes("=="));
-                        if (isAssignment && !lowerLine.startsWith("type") && !lowerLine.startsWith("repeat") && !lowerLine.startsWith("render")) {
+                    if(isRunning && line !== "") {
+                        // let x = 10
+                        if(lower.startsWith("let ") || (line.includes("=") && !line.includes("=="))) {
                             let parts = line.replace(/^let\s+/i, '').split("=");
                             let varName = parts[0].trim();
-                            let expression = parts[1].trim();
+                            let expr = parts[1].trim();
 
-                            // Handle Strings
-                            if (expression.startsWith('"') && expression.endsWith('"')) {
-                                memory[varName] = expression.slice(1, -1);
+                            if(expr.startsWith('"')) {
+                                memory[varName] = expr.replace(/"/g, '');
                             } else {
-                                // Handle Math and Variable combinations
-                                let evalString = expression;
-                                for (let key in memory) {
-                                    // Replace variables in the math expression with their actual numbers
-                                    let regex = new RegExp(`\\b${key}\\b`, "g");
-                                    evalString = evalString.replace(regex, memory[key]);
+                                let evalStr = expr;
+                                for(let k in memory) {
+                                    evalStr = evalStr.replace(new RegExp(`\\b${k}\\b`, "g"), memory[k]);
                                 }
-                                try {
-                                    // Safely evaluate the math
-                                    memory[varName] = Function('"use strict";return (' + evalString + ')')();
-                                } catch(e) {
-                                    memory[varName] = expression; // Fallback to string if math fails
-                                }
+                                try { memory[varName] = eval('"use strict"; (' + evalStr + ')'); } 
+                                catch { memory[varName] = expr; }
                             }
                             continue;
                         }
 
-                        // 2. Printing to Terminal (type)
-                        if (lowerLine.startsWith("type (") && line.endsWith(")")) {
-                            let content = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")")).trim();
-                            if (content.startsWith('"')) {
-                                terminal.innerHTML += content.replace(/"/g, '') + "\n";
-                            } else {
-                                terminal.innerHTML += (memory[content] !== undefined ? memory[content] : `<span class='error-text'>Undefined: ${content}</span>`) + "\n";
-                            }
+                        // type ("text")
+                        if(lower.startsWith("type (") && line.endsWith(")")) {
+                            let val = line.substring(line.indexOf("(")+1, line.lastIndexOf(")")).trim();
+                            if(val.startsWith('"')) terminal.innerHTML += val.replace(/"/g, '') + "\n";
+                            else terminal.innerHTML += (memory[val] ?? `[ERROR: ${val} undefined]`) + "\n";
                             continue;
                         }
 
-                        // 3. Rendering to Live Preview (render)
-                        if (lowerLine.startsWith("render (") && line.endsWith(")")) {
-                            let content = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")")).trim();
-                            if (content.startsWith('"')) {
-                                htmlContent += content.replace(/"/g, '');
-                            } else {
-                                htmlContent += (memory[content] !== undefined ? memory[content] : "");
-                            }
+                        // render ("<h1>")
+                        if(lower.startsWith("render (") && line.endsWith(")")) {
+                            let val = line.substring(line.indexOf("(")+1, line.lastIndexOf(")")).trim();
+                            htmlContent += val.startsWith('"') ? val.replace(/"/g, '') : (memory[val] || "");
                             preview.srcdoc = htmlContent;
                             continue;
                         }
 
-                        // 4. Loops (repeat x { ... })
-                        if (lowerLine.startsWith("repeat ") && lowerLine.endsWith("{")) {
-                            let countKey = lowerLine.substring(7, lowerLine.length - 1).trim();
-                            // Check if count is a number, or pull it from memory
+                        // repeat x { }
+                        if(lower.startsWith("repeat ") && lower.endsWith("{")) {
+                            let countKey = lower.substring(7, lower.length-1).trim();
                             let count = isNaN(countKey) ? memory[countKey] : parseInt(countKey);
-                            
-                            let loopLines = [];
+                            let subLines = [];
                             let depth = 1;
                             i++;
-                            while (i < linesArray.length && depth > 0) {
-                                if (linesArray[i].includes("{")) depth++;
-                                if (linesArray[i].includes("}")) depth--;
-                                if (depth > 0) loopLines.push(linesArray[i]);
+                            while(i < linesArr.length && depth > 0) {
+                                if(linesArr[i].includes("{")) depth++;
+                                if(linesArr[i].includes("}")) depth--;
+                                if(depth > 0) subLines.push(linesArr[i]);
                                 i++;
                             }
-                            i--; // Adjust index
-
-                            for (let l = 0; l < (count || 0); l++) {
-                                await executeBatch(loopLines);
-                            }
-                            continue;
-                        }
-
-                        // 5. Frontend Declaration
-                        if (lowerLine === "frontend") {
-                            terminal.innerHTML += "<span class='sys-text'>[System: Environment FRONTEND]</span>\n";
-                            continue;
+                            i--;
+                            for(let l=0; l<count; l++) await exec(subLines);
                         }
                     }
                 }
             }
+            await exec(lines);
+            terminal.innerHTML += ">>> EXECUTION FINISHED";
+        }
 
-            await executeBatch(lines);
-            terminal.innerHTML += "<span class='sys-text'>--- Program Finished ---</span>\n";
-            // Scroll to bottom of terminal
-            terminal.scrollTop = terminal.scrollHeight;
+        // --- PAGES MODE ---
+        function launchPagesMode() {
+            const code = localStorage.getItem(`${KEY_PREFIX}${currentSpace}_index.html`);
+            if(!code) return alert("Create an 'index.html' file first!");
+            const blob = new Blob([code], {type: 'text/html'});
+            window.open(URL.createObjectURL(blob), '_blank');
+        }
+
+        function exportSpace() {
+            const data = {};
+            const prefix = `${KEY_PREFIX}${currentSpace}_`;
+            for(let i=0; i<localStorage.length; i++){
+                const k = localStorage.key(i);
+                if(k.startsWith(prefix)) data[k.replace(prefix, "")] = localStorage.getItem(k);
+            }
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `${currentSpace}.json`;
+            a.click();
         }
     </script>
 </body>
