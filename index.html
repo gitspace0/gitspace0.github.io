@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitSpace | Ultimate Local IDE</title>
+    <title>GitSpace | Professional IDE & SBFB Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .editor-bg { background: #1e1e1e; color: #d4d4d4; }
@@ -11,6 +11,7 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #2d2d2d; }
         ::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; }
+        .blob-link { color: #60a5fa; text-decoration: underline; font-size: 10px; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
@@ -20,30 +21,30 @@
             <div class="bg-blue-600 p-2 rounded-lg">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             </div>
-            <h1 class="text-xl font-bold tracking-tighter">GitSpace <span class="text-xs font-light text-gray-400 ml-1 italic underline">SBFB Engine v2.0</span></h1>
+            <h1 class="text-xl font-bold tracking-tighter">GitSpace <span class="text-xs font-light text-gray-400 ml-1 italic">v3.5 Multi-Space</span></h1>
         </div>
 
         <div class="flex items-center space-x-4">
             <div class="flex flex-col items-end mr-2">
-                <span class="text-[10px] uppercase text-gray-500 font-bold">Current Space</span>
-                <select id="spaceSelector" onchange="switchSpace()" class="bg-gray-800 text-blue-400 text-sm font-mono border-none outline-none cursor-pointer">
+                <span class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Space</span>
+                <select id="spaceSelector" onchange="switchSpace()" class="bg-transparent text-blue-400 text-sm font-mono border-none outline-none cursor-pointer">
                     </select>
             </div>
             <button onclick="createNewSpace()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs transition-all">+ New Space</button>
-            <button onclick="exportSpace()" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs font-bold transition-all">Export .JSON</button>
+            <button onclick="exportSpace()" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs font-bold">Export .JSON</button>
         </div>
     </header>
 
     <main class="flex-grow flex overflow-hidden">
         
         <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
-            <div class="p-4 bg-gray-900 flex justify-between items-center">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Explorer</span>
-                <button onclick="newFile()" class="text-gray-400 hover:text-white text-lg font-bold">+</button>
+            <div class="p-4 bg-gray-900 flex justify-between items-center border-b border-gray-800">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Files</span>
+                <button onclick="newFile()" class="text-blue-400 hover:text-white text-lg font-bold">+</button>
             </div>
             <ul id="fileList" class="flex-grow overflow-y-auto py-2">
                 </ul>
-            <div class="p-4 border-t border-gray-700">
+            <div class="p-4 border-t border-gray-700 space-y-2">
                 <button onclick="launchPagesMode()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm font-bold shadow-lg transition-all">
                     🚀 Launch Pages
                 </button>
@@ -52,20 +53,25 @@
 
         <section class="flex-grow flex flex-col bg-gray-900">
             <div class="bg-gray-800 p-2 flex items-center space-x-2 border-b border-gray-700">
-                <input type="text" id="activeFilename" placeholder="filename.html" class="bg-transparent text-gray-300 text-sm font-mono px-2 py-1 outline-none border-b border-gray-600 focus:border-blue-500 w-64">
+                <input type="text" id="activeFilename" onkeyup="updateUIForFile(this.value)" placeholder="filename.html" class="bg-transparent text-gray-300 text-sm font-mono px-2 py-1 outline-none border-b border-gray-600 focus:border-blue-500 w-64">
                 <button onclick="saveActiveFile()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded text-xs font-bold">Save</button>
+                <button onclick="copyBlobLink()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded text-xs font-bold">🔗 Copy Blob Link</button>
+                
                 <div id="langIndicator" class="text-[10px] font-bold px-2 py-1 rounded bg-gray-700 text-gray-400 uppercase">RAW</div>
                 <button id="runSbfbBtn" onclick="runSbfb()" class="hidden bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-1 rounded text-xs font-bold ml-auto">▶ RUN SBFB</button>
             </div>
-            <textarea id="editor" spellcheck="false" class="flex-grow p-6 editor-bg font-mono text-sm outline-none resize-none" placeholder="// Start coding here..."></textarea>
+            <textarea id="editor" spellcheck="false" class="flex-grow p-6 editor-bg font-mono text-sm outline-none resize-none" placeholder="// Create index.html or filename.sbfb..."></textarea>
         </section>
 
         <aside class="w-96 bg-black border-l border-gray-700 flex flex-col">
-            <div class="bg-gray-900 p-3 text-xs font-bold text-gray-400 border-b border-gray-700">SBFB TERMINAL</div>
+            <div class="bg-gray-900 p-3 text-xs font-bold text-gray-400 border-b border-gray-700 flex justify-between items-center">
+                <span>SBFB TERMINAL</span>
+                <button onclick="document.getElementById('terminal').innerHTML=''" class="text-[10px] text-gray-500 hover:text-white">CLEAR</button>
+            </div>
             <div id="terminal" class="flex-grow p-4 terminal-bg font-mono text-xs overflow-y-auto whitespace-pre-wrap">Terminal ready...</div>
-            <div class="h-1/2 bg-white border-t-4 border-gray-800">
-                <div class="bg-gray-200 p-1 text-[10px] font-bold text-gray-600 text-center uppercase">Live Frontend Preview</div>
-                <iframe id="preview" class="w-full h-full bg-white"></iframe>
+            <div class="h-1/2 bg-white border-t-4 border-gray-800 relative">
+                <div class="absolute top-0 left-0 right-0 bg-gray-200 p-1 text-[10px] font-bold text-gray-600 text-center uppercase">Live Frontend Preview</div>
+                <iframe id="preview" class="w-full h-full bg-white pt-6"></iframe>
             </div>
         </aside>
 
@@ -114,7 +120,6 @@
             if(name) currentSpace = name;
             else currentSpace = document.getElementById("spaceSelector").value;
             localStorage.setItem("GS_ACTIVE_SPACE", currentSpace);
-            currentFile = "";
             document.getElementById("editor").value = "";
             document.getElementById("activeFilename").value = "";
             refreshFileList();
@@ -140,12 +145,12 @@
                             <span class="${isSbfb ? 'text-yellow-400' : 'text-blue-400'}">${isSbfb ? '⚡' : '📄'}</span>
                             <span class="text-xs text-gray-300 font-mono truncate">${filename}</span>
                         </div>
-                        <button onclick="deleteFile('${filename}')" class="text-red-500 opacity-0 group-hover:opacity-100 font-bold">×</button>
+                        <button onclick="deleteFile('${filename}')" class="text-red-500 opacity-0 group-hover:opacity-100 font-bold px-2">×</button>
                     `;
                     list.appendChild(li);
                 }
             }
-            if(filesFound === 0) list.innerHTML = `<li class="p-4 text-center text-gray-500 text-[10px] uppercase tracking-widest">No files in space</li>`;
+            if(filesFound === 0) list.innerHTML = `<li class="p-4 text-center text-gray-500 text-[10px] uppercase">No files in space</li>`;
         }
 
         function saveActiveFile() {
@@ -153,16 +158,20 @@
             const content = document.getElementById("editor").value;
             if(!name) return alert("Enter a filename!");
             localStorage.setItem(`${KEY_PREFIX}${currentSpace}_${name}`, content);
-            currentFile = name;
             refreshFileList();
             updateUIForFile(name);
+        }
+
+        function newFile() {
+            document.getElementById("activeFilename").value = "";
+            document.getElementById("editor").value = "";
+            updateUIForFile("");
         }
 
         function loadFile(name) {
             const content = localStorage.getItem(`${KEY_PREFIX}${currentSpace}_${name}`);
             document.getElementById("editor").value = content;
             document.getElementById("activeFilename").value = name;
-            currentFile = name;
             updateUIForFile(name);
         }
 
@@ -207,53 +216,35 @@
                 for(let i=0; i<linesArr.length; i++) {
                     let line = linesArr[i].trim();
                     let lower = line.toLowerCase();
-
                     if(lower === "start:sbfb") { isRunning = true; continue; }
                     if(lower === "<end:sbfb>") { isRunning = false; break; }
-
                     if(isRunning && line !== "") {
-                        // let x = 10
                         if(lower.startsWith("let ") || (line.includes("=") && !line.includes("=="))) {
                             let parts = line.replace(/^let\s+/i, '').split("=");
                             let varName = parts[0].trim();
                             let expr = parts[1].trim();
-
-                            if(expr.startsWith('"')) {
-                                memory[varName] = expr.replace(/"/g, '');
-                            } else {
+                            if(expr.startsWith('"')) memory[varName] = expr.replace(/"/g, '');
+                            else {
                                 let evalStr = expr;
-                                for(let k in memory) {
-                                    evalStr = evalStr.replace(new RegExp(`\\b${k}\\b`, "g"), memory[k]);
-                                }
+                                for(let k in memory) evalStr = evalStr.replace(new RegExp(`\\b${k}\\b`, "g"), memory[k]);
                                 try { memory[varName] = eval('"use strict"; (' + evalStr + ')'); } 
                                 catch { memory[varName] = expr; }
                             }
-                            continue;
                         }
-
-                        // type ("text")
                         if(lower.startsWith("type (") && line.endsWith(")")) {
                             let val = line.substring(line.indexOf("(")+1, line.lastIndexOf(")")).trim();
-                            if(val.startsWith('"')) terminal.innerHTML += val.replace(/"/g, '') + "\n";
-                            else terminal.innerHTML += (memory[val] ?? `[ERROR: ${val} undefined]`) + "\n";
-                            continue;
+                            terminal.innerHTML += (val.startsWith('"') ? val.replace(/"/g, '') : (memory[val] ?? `[ERROR: ${val}]`)) + "\n";
                         }
-
-                        // render ("<h1>")
                         if(lower.startsWith("render (") && line.endsWith(")")) {
                             let val = line.substring(line.indexOf("(")+1, line.lastIndexOf(")")).trim();
                             htmlContent += val.startsWith('"') ? val.replace(/"/g, '') : (memory[val] || "");
                             preview.srcdoc = htmlContent;
-                            continue;
                         }
-
-                        // repeat x { }
                         if(lower.startsWith("repeat ") && lower.endsWith("{")) {
                             let countKey = lower.substring(7, lower.length-1).trim();
                             let count = isNaN(countKey) ? memory[countKey] : parseInt(countKey);
                             let subLines = [];
-                            let depth = 1;
-                            i++;
+                            let depth = 1; i++;
                             while(i < linesArr.length && depth > 0) {
                                 if(linesArr[i].includes("{")) depth++;
                                 if(linesArr[i].includes("}")) depth--;
@@ -270,12 +261,34 @@
             terminal.innerHTML += ">>> EXECUTION FINISHED";
         }
 
-        // --- PAGES MODE ---
+        // --- BLOB URL GENERATOR & PAGES ---
+        function generateBlobUrl() {
+            let code = document.getElementById("editor").value;
+            const filename = document.getElementById("activeFilename").value;
+            
+            // If the user isn't on an HTML file, try to find their index.html
+            if (!filename.endsWith(".html")) {
+                code = localStorage.getItem(`${KEY_PREFIX}${currentSpace}_index.html`);
+            }
+            
+            if (!code) return null;
+            
+            const blob = new Blob([code], { type: 'text/html' });
+            return URL.createObjectURL(blob);
+        }
+
         function launchPagesMode() {
-            const code = localStorage.getItem(`${KEY_PREFIX}${currentSpace}_index.html`);
-            if(!code) return alert("Create an 'index.html' file first!");
-            const blob = new Blob([code], {type: 'text/html'});
-            window.open(URL.createObjectURL(blob), '_blank');
+            const url = generateBlobUrl();
+            if(!url) return alert("Please save an 'index.html' file first!");
+            window.open(url, '_blank');
+        }
+
+        function copyBlobLink() {
+            const url = generateBlobUrl();
+            if(!url) return alert("Save an HTML file to generate a unique Blob link!");
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Uneditable Link Copied:\n" + url);
+            });
         }
 
         function exportSpace() {
